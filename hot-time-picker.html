@@ -223,8 +223,6 @@ TODO:
 
       _timeChanged: function(){
 
-        //debugger;
-
         if( !this.hour || !this.minute || !this.ampm ){
           this._protectHourMinuteAmpm = true;
           this.value = '';
@@ -240,7 +238,6 @@ TODO:
 
         var formattedHour = ( this.ampm == 'pm' && Number( this.hour ) < 12 ) ? String( Number( this.hour ) + 12 ) : this.hour;
 
-        debugger;
         if( this.ampm == 'am' && this.hour == 0 ) this.$.hour.label = 'Midnight';
         else if( this.ampm == 'pm' && this.hour == 12 ) this.$.hour.label = 'Midday';
         else this.$.hour.label = 'Hr';
@@ -259,10 +256,16 @@ TODO:
       _valueChanged: function( v ){
         var m;
 
-        debugger;
-
         // FIXME: Is this the way to go?
         if( ! this._protectHourMinuteAmpm ){
+
+          if( ! v ) {
+            this.minute = '';
+            this.hour = '';
+            this.ampm = '';
+            return;
+          }
+          
           if( m = v.match(/^(\d{2}):(\d{2})$/m) ){
 
 
