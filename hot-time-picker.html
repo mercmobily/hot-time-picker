@@ -113,6 +113,12 @@ TODO:
         ampm: {
           type: String,
         },
+
+        forceInvalid: {
+          type: Boolean,
+          default: false,
+        },
+
       },
 
       behaviors: [
@@ -134,6 +140,12 @@ TODO:
 
         this.$.minute.inputElement.validate = function(){
 
+          // Force to be invalid, element-wide
+          if( el.forceInvalid ){
+            this.invalid = true;
+            return !this.invalid;
+          }
+
           // Value is empty: invalid if main element is required or one field
           // is set
           if( !this.value || this.value == '' ){
@@ -154,6 +166,12 @@ TODO:
 
 
         this.$.ampm.validate = function(){
+
+          // Force to be invalid, element-wide
+          if( el.forceInvalid ){
+            this.invalid = true;
+            return !this.invalid;
+          }
 
           // Value is empty: invalid if main element is required or one field
           // is set
@@ -182,6 +200,12 @@ TODO:
         },
 
         this.$.hour.inputElement.validate = function(){
+
+          // Force to be invalid, element-wide
+          if( el.forceInvalid ){
+            this.invalid = true;
+            return !this.invalid;
+          }
 
           // Value is empty: invalid if main element is required or one field
           // is set
@@ -265,7 +289,7 @@ TODO:
             this.ampm = '';
             return;
           }
-          
+
           if( m = v.match(/^(\d{2}):(\d{2})$/m) ){
 
 
