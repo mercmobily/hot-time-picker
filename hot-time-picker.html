@@ -169,23 +169,25 @@ TODO:
 
         this.$.ampm.validate = function(){
 
+          // Value will depend on whether AM or PM is selected
+          var value = el.$.ampmListbox.selected;
+
           // Value is empty: invalid if main element is required or one field
           // is set
-          if( !this.value || this.value == '' ){
+          if( !value || value == '' ){
             this.invalid = !!el.required || el._oneFieldSet();
             return !this.invalid;
           }
 
-          var ampm = el.$.ampmListbox.selected;
 
           // 12:10AM is nonsense, it must be 00:10AM
-          if( ampm == 'am' && el.hour == 12 ){
+          if( value == 'am' && el.hour == 12 ){
             this.invalid = true;
             return !this.invalid;
           }
 
           // 00:10PM is nonsense, it must be 12:10PM
-          if( ampm == 'pm' && el.hour == 0 ){
+          if( value == 'pm' && el.hour == 0 ){
             this.invalid = true;
             return !this.invalid;
           }
@@ -298,7 +300,6 @@ TODO:
           this.$.ampm.invalid = true;
         }
       },
-
 
       /*
        * Validate function; validation is TOTALLY delegated to the
