@@ -257,23 +257,16 @@ TODO:
           this.value = this._pad(formattedHour) + ":" + this._pad(this.minute);
         }
 
-        this._protectHourMinuteAmpm = false;
         this.validate();
+        this._protectHourMinuteAmpm = false;
       },
 
       _valueChanged: function( v ){
         var m;
 
-        // FIXME: Is this the way to go?
-        if( ! this._protectHourMinuteAmpm ){
+        if( this._protectHourMinuteAmpm ) return;
 
-          if( ! v ) {
-            this.minute = '';
-            this.hour = '';
-            this.ampm = '';
-            return;
-          }
-
+        if(  v && v.match ) {
           if( m = v.match(/^(\d{2}):(\d{2})$/m) ){
 
             this.minute = m[ 2 ];
@@ -287,8 +280,14 @@ TODO:
             } else {
               this.ampm = 'am';
             }
+          } else {
+            this.minute = '';
+            this.hour = '';
+            this.ampm = '';
           }
         }
+
+        this.validate();
       },
 
 
@@ -298,6 +297,10 @@ TODO:
           this.$.hour.invalid = true;
           this.$.minute.invalid = true;
           this.$.ampm.invalid = true;
+        } else {
+          this.$.hour.invalid = false;
+          this.$.minute.invalid = false;
+          this.$.ampm.invalid = false;
         }
       },
 
@@ -311,14 +314,6 @@ TODO:
         this.$.hour.validate();
         this.$.minute.validate();
         this.$.ampm.validate();
-
-        // If MAIN element is required and it's not set, labelExtra is forced to "not set"
-        // and it returns "false"
-        if( this.required && ! this.value ){
-          //this._labelExtra=this.valueNotSetConfirmation;
-          this.invalid = true;
-          return false;
-        }
 
         // It's set as invalid if any one of the fields is invalid
         this.invalid = this.$.hour.invalid || this.$.minute.invalid || this.$.ampm.invalid;
