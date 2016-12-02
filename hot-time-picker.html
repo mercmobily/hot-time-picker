@@ -77,13 +77,19 @@ TODO:
 
     <div class="container">
       <label>{{label}}</label>
+
+      <template is="dom-if" if="[[invalid]]">
+        <div class="error">[[errorMessage]]</div>
+      </template>
+
+
       <paper-input id="hour" maxlength="2" class="hour" value="{{hour}}" name="hour" label="Hr" allowed-pattern="\d" pattern="^\d\d?$" error-message="Invalid!"></paper-input>
 
 
       <paper-input id="minute" id="ampm" maxlength="2" class="minute" value="{{minute}}" label="Min" pattern="^\d\d\d\d$" error-message="Invalid!"></paper-input>
 
       <paper-dropdown-menu id="ampm" value="[[ampm]]" class="ampm" name="ampm">
-        <paper-listbox class="dropdown-content" selected="{{ampm}}" attr-for-selected="value">
+        <paper-listbox id="ampmListbox" class="dropdown-content" selected="{{ampm}}" attr-for-selected="value">
           <paper-item label="" value="">Pick</paper-item>
           <paper-item value="am">AM</paper-item>
           <paper-item value="pm">PM</paper-item>
@@ -114,9 +120,11 @@ TODO:
           type: String,
         },
 
-        forceInvalid: {
+
+        invalid: {
           type: Boolean,
           default: false,
+          observer: '_invalidChanged'
         },
 
       },
@@ -140,12 +148,6 @@ TODO:
 
         this.$.minute.inputElement.validate = function(){
 
-          // Force to be invalid, element-wide
-          if( el.forceInvalid ){
-            this.invalid = true;
-            return !this.invalid;
-          }
-
           // Value is empty: invalid if main element is required or one field
           // is set
           if( !this.value || this.value == '' ){
@@ -167,12 +169,6 @@ TODO:
 
         this.$.ampm.validate = function(){
 
-          // Force to be invalid, element-wide
-          if( el.forceInvalid ){
-            this.invalid = true;
-            return !this.invalid;
-          }
-
           // Value is empty: invalid if main element is required or one field
           // is set
           if( !this.value || this.value == '' ){
@@ -180,7 +176,7 @@ TODO:
             return !this.invalid;
           }
 
-          var ampm = this.value;
+          var ampm = el.$.ampmListbox.selected;
 
           // 12:10AM is nonsense, it must be 00:10AM
           if( ampm == 'am' && el.hour == 12 ){
@@ -201,12 +197,6 @@ TODO:
 
         this.$.hour.inputElement.validate = function(){
 
-          // Force to be invalid, element-wide
-          if( el.forceInvalid ){
-            this.invalid = true;
-            return !this.invalid;
-          }
-
           // Value is empty: invalid if main element is required or one field
           // is set
           if( !this.value || this.value == '' ){
@@ -216,6 +206,9 @@ TODO:
 
           var hour = this.value;
 
+          var ampm = el.$.ampmListbox.selected;
+
+
           // Out of range in all cases
           if( hour < 0 || hour > 12 ){
             this.invalid = true;
@@ -223,13 +216,13 @@ TODO:
           };
 
           // 12:10AM is nonsense, it must be 00:10AM
-          if( el.ampm == 'am' && hour == 12 ){
+          if( ampm == 'am' && hour == 12 ){
             this.invalid = true;
             return !this.invalid;
           }
 
           // 00:10PM is nonsense, it must be 12:10PM
-          if( el.ampm == 'pm' && hour == 0 ){
+          if( ampm == 'pm' && hour == 0 ){
             this.invalid = true;
             return !this.invalid;
           }
@@ -247,34 +240,23 @@ TODO:
 
       _timeChanged: function(){
 
-        if( !this.hour || !this.minute || !this.ampm ){
-          this._protectHourMinuteAmpm = true;
-          this.value = '';
-          this._protectHourMinuteAmpm = false;
+        this._protectHourMinuteAmpm = true;
 
-          // async() is used because when user changes selection in paper-listbox,
-          // paper-dropdown-menu (which is this.$.month) gets notified later.
-          //this.validate();
-          this.async( function(){ this.validate(); } );
-          return;
+        if( !this.hour || !this.minute || !this.ampm ){
+          this.value = '';
+        } else {
+          var formattedHour = ( this.ampm == 'pm' && Number( this.hour ) < 12 ) ? String( Number( this.hour ) + 12 ) : this.hour;
+
+          if( this.ampm == 'am' && this.hour == 0 ) this.$.hour.label = 'Midnight';
+          else if( this.ampm == 'pm' && this.hour == 12 ) this.$.hour.label = 'Midday';
+          else this.$.hour.label = 'Hr';
+
+          this._protectHourMinuteAmpm = true;
+          this.value = this._pad(formattedHour) + ":" + this._pad(this.minute);
         }
 
-
-        var formattedHour = ( this.ampm == 'pm' && Number( this.hour ) < 12 ) ? String( Number( this.hour ) + 12 ) : this.hour;
-
-        if( this.ampm == 'am' && this.hour == 0 ) this.$.hour.label = 'Midnight';
-        else if( this.ampm == 'pm' && this.hour == 12 ) this.$.hour.label = 'Midday';
-        else this.$.hour.label = 'Hr';
-
-        this._protectHourMinuteAmpm = true;
-        this.value = this._pad(formattedHour) + ":" + this._pad(this.minute);
         this._protectHourMinuteAmpm = false;
-
-        // async() is used because when user changes selection in paper-listbox,
-        // paper-dropdown-menu (which is this.$.month) gets notified later.
-        //this.validate();
-        this.async( function(){ this.validate(); } );
-
+        this.validate();
       },
 
       _valueChanged: function( v ){
@@ -292,8 +274,6 @@ TODO:
 
           if( m = v.match(/^(\d{2}):(\d{2})$/m) ){
 
-
-
             this.minute = m[ 2 ];
             this.hour = this._pad( Number( m[ 1 ] ) );
 
@@ -306,6 +286,16 @@ TODO:
               this.ampm = 'am';
             }
           }
+        }
+      },
+
+
+      // If invalid is set to "true", it will artificially invalidate _all_ fields
+      _invalidChanged: function(){
+        if( this.invalid ){
+          this.$.hour.invalid = true;
+          this.$.minute.invalid = true;
+          this.$.ampm.invalid = true;
         }
       },
 
