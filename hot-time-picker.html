@@ -1,7 +1,9 @@
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-input/paper-input-error.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../paper-listbox/paper-listbox.html">
 <link rel="import" href="../paper-item/paper-item.html">
-<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../paper-styles/default-theme.html">
 <link rel="import" href="../paper-styles/typography.html">
@@ -24,109 +26,75 @@ TODO:
 
 <dom-module id="hot-time-picker">
   <template>
-    <style>
+    <style include="iron-flex">
       :host {
         display: block;
-        margin-top: 20px;
-        margin-bottom: 5px;
+        padding: 8px 0;
+
+        @apply(--hot-time-picker);
+
+        --paper-input-container: {
+          padding-top: 0; /* No space for input labels, since we don't have them */
+        }
       }
-
-      .container {
-        @apply(--layout-flex-auto);
-        @apply(--layout-relative);
-
-        width: 100%;
-        max-width: 100%;
-      }
-
       label {
-        position: absolute;
-        top: 0;
-        right: 0;
-        left: 0;
-        width: 100%;
-        font: inherit;
-        color: var(--hot-time-picker-label-color, --secondary-text-color);
-        -webkit-transition: -webkit-transform 0.25s, width 0.25s;
-        transition: transform 0.25s, width 0.25s;
-        -webkit-transform-origin: left top;
-        transform-origin: left top;
+        display: block;
+        color: var(--hot-time-picker-color, --secondary-text-color);
 
-        -webkit-transform: translateY(-25%) scale(0.75);
-        transform: translateY(-25%) scale(0.75);
-        width: 133%;
-
-        @apply(--paper-font-common-nowrap);
-        @apply(--paper-font-subhead);
+        @apply(--paper-font-caption)
       }
-
-      .hour, .ampm, .minute {
-        display: inline-block;
+      .inputs {
+        @apply(--layout-horizontal);
       }
-      .hour {
-        width: 3em;
+      paper-input {
+        flex: 3;
+        margin-right: 8px;
       }
-      .minute {
-        width: 3em;
+      paper-dropdown-menu {
+        flex: 2;
       }
-      .ampm {
-        width: 4em;
-      }
-
     </style>
 
-    <div class="container">
-      <label>{{label}}</label>
+    <label>{{label}}</label>
 
-      <template is="dom-if" if="[[invalid]]">
-        <div class="error">[[errorMessage]]</div>
-      </template>
+    <div class="inputs">
+      <paper-input id="hour" maxlength="2" value="{{hour}}" name="hour" placeholder="Hr" allowed-pattern="\d" pattern="^\d\d?$" error-message="Invalid!" no-label-float></paper-input>
 
+      <paper-input id="minute" maxlength="2" value="{{minute}}" placeholder="Min" pattern="^\d\d\d\d$" error-message="Invalid!" no-label-float></paper-input>
 
-      <paper-input id="hour" maxlength="2" class="hour" value="{{hour}}" name="hour" label="Hr" allowed-pattern="\d" pattern="^\d\d?$" error-message="Invalid!"></paper-input>
-
-
-      <paper-input id="minute" id="ampm" maxlength="2" class="minute" value="{{minute}}" label="Min" pattern="^\d\d\d\d$" error-message="Invalid!"></paper-input>
-
-      <paper-dropdown-menu id="ampm" value="[[ampm]]" class="ampm" name="ampm">
+      <paper-dropdown-menu id="ampm" value="[[ampm]]" name="ampm" no-label-float>
         <paper-listbox id="ampmListbox" class="dropdown-content" selected="{{ampm}}" attr-for-selected="value">
-          <paper-item label="" value="">Pick</paper-item>
+          <paper-item label="" value="am">Pick</paper-item>
           <paper-item value="am">AM</paper-item>
           <paper-item value="pm">PM</paper-item>
         </paper-listbox>
       </paper-dropdown-menu>
+    </div>
 
-    </container>
-
+    <template is="dom-if" if="[[invalid]]">
+      <paper-input-error aria-live="assertive">[[errorMessage]]</paper-input-error>
+    </template>
   </template>
 
   <script>
     Polymer({
-
       is: 'hot-time-picker',
 
       properties: {
-
         hour: {
-          type: String,
+          type: String
         },
-
         minute: {
-          type: String,
+          type: String
         },
-
-
         ampm: {
-          type: String,
+          type: String
         },
-
-
         invalid: {
           type: Boolean,
           default: false,
           observer: '_invalidChanged'
-        },
-
+        }
       },
 
       behaviors: [
@@ -319,7 +287,6 @@ TODO:
         this.invalid = this.$.hour.invalid || this.$.minute.invalid || this.$.ampm.invalid;
         return !this.invalid;
       }
-
     });
   </script>
 </dom-module>
