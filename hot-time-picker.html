@@ -35,7 +35,7 @@ TODO:
 
         --paper-input-container: {
           padding-top: 0; /* No space for input labels, since we don't have them */
-        }
+        };
       }
       label {
         display: block;
@@ -51,6 +51,14 @@ TODO:
         margin-right: 8px;
       }
       paper-dropdown-menu {
+        --paper-input-container-input: {
+          box-sizing: border-box;
+          margin-bottom: -1px;
+          border: 1px solid var(--paper-grey-400);
+          border-right: 0;
+          padding: 0.5rem;
+        };
+
         flex: 2;
       }
     </style>
