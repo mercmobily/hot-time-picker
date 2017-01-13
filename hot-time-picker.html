@@ -39,18 +39,19 @@ TODO:
       }
       label {
         display: block;
-        color: var(--hot-time-picker-color, --secondary-text-color);
-
-        @apply(--paper-font-caption)
+        @apply(--paper-font-caption);
+        color: var(--secondary-text-color);
       }
-      .inputs {
+      .container {
         @apply(--layout-horizontal);
       }
       paper-input {
-        flex: 3;
+        @apply(--layout-flex);
         margin-right: 8px;
       }
       paper-dropdown-menu {
+        @apply(--layout-flex);
+
         --paper-input-container-input: {
           box-sizing: border-box;
           margin-bottom: -1px;
@@ -58,28 +59,47 @@ TODO:
           border-right: 0;
           padding: 0.5rem;
         };
-
-        flex: 2;
       }
     </style>
 
-    <label>{{label}}</label>
+    <label hidden$="[[!label]]">[[label]]</label>
 
-    <div class="inputs">
-      <paper-input id="hour" maxlength="2" value="{{hour}}" name="hour" placeholder="Hr" allowed-pattern="\d" pattern="^\d\d?$" error-message="Invalid!" no-label-float></paper-input>
+    <div class="container">
+      <paper-input id="hour"
+          maxlength="2"
+          value="{{hour}}"
+          name="hour"
+          placeholder="Hr"
+          allowed-pattern="\d"
+          pattern="^\d\d?$"
+          auto-validate
+          no-label-float>
+      </paper-input>
 
-      <paper-input id="minute" maxlength="2" value="{{minute}}" placeholder="Min" pattern="^\d\d\d\d$" error-message="Invalid!" no-label-float></paper-input>
+      <paper-input id="minute"
+          maxlength="2"
+          value="{{minute}}"
+          placeholder="Min"
+          pattern="^\d\d\d\d$"
+          auto-validate
+          no-label-float>
+      </paper-input>
 
-      <paper-dropdown-menu id="ampm" value="[[ampm]]" name="ampm" no-label-float>
-        <paper-listbox id="ampmListbox" class="dropdown-content" selected="{{ampm}}" attr-for-selected="value">
-          <paper-item label="" value="am">Pick</paper-item>
+      <paper-dropdown-menu id="ampm"
+          value="[[ampm]]"
+          name="ampm"
+          no-label-float>
+        <paper-listbox id="ampmListbox"
+            class="dropdown-content"
+            selected="{{ampm}}"
+            attr-for-selected="value">
           <paper-item value="am">AM</paper-item>
           <paper-item value="pm">PM</paper-item>
         </paper-listbox>
       </paper-dropdown-menu>
     </div>
 
-    <template is="dom-if" if="[[invalid]]">
+    <template is="dom-if" if="[[errorMessage]]">
       <paper-input-error aria-live="assertive">[[errorMessage]]</paper-input-error>
     </template>
   </template>
@@ -89,15 +109,9 @@ TODO:
       is: 'hot-time-picker',
 
       properties: {
-        hour: {
-          type: String
-        },
-        minute: {
-          type: String
-        },
-        ampm: {
-          type: String
-        },
+        hour: String,
+        minute: String,
+        ampm: String,
         invalid: {
           type: Boolean,
           default: false,
@@ -114,26 +128,24 @@ TODO:
         '_timeChanged(hour,minute,ampm)',
       ],
 
-      _oneFieldSet: function(){
-        return !!( this.$.hour.value || this.$.minute.value || this.$.ampm.value );
+      _oneFieldSet: function() {
+        return !!(this.$.hour.value || this.$.minute.value || this.$.ampm.value);
       },
 
-      ready: function(){
-
+      ready: function() {
         var el = this;
 
-        this.$.minute.inputElement.validate = function(){
-
+        this.$.minute.inputElement.validate = function() {
           // Value is empty: invalid if main element is required or one field
           // is set
-          if( !this.value || this.value == '' ){
+          if (!this.value || this.value === '') {
             this.invalid = !!el.required || el._oneFieldSet();
             return !this.invalid;
           }
 
           var minute = this.value;
 
-          if( minute < 0 || minute > 59 ){
+          if (minute < 0 || minute > 59) {
             this.invalid = true;
           } else {
             this.invalid = false;
@@ -143,90 +155,82 @@ TODO:
         };
 
 
-        this.$.ampm.validate = function(){
-
+        this.$.ampm.validate = function() {
           // Value will depend on whether AM or PM is selected
           var value = el.$.ampmListbox.selected;
 
           // Value is empty: invalid if main element is required or one field
           // is set
-          if( !value || value == '' ){
+          if (!value || value === '') {
             this.invalid = !!el.required || el._oneFieldSet();
             return !this.invalid;
           }
 
-
           // 12:10AM is nonsense, it must be 00:10AM
-          if( value == 'am' && el.hour == 12 ){
+          if (value == 'am' && el.hour == 12) {
             this.invalid = true;
             return !this.invalid;
           }
 
           // 00:10PM is nonsense, it must be 12:10PM
-          if( value == 'pm' && el.hour == 0 ){
+          if (value == 'pm' && el.hour === 0) {
             this.invalid = true;
             return !this.invalid;
           }
 
           this.invalid = false;
           return !this.invalid;
-
         },
 
-        this.$.hour.inputElement.validate = function(){
-
+        this.$.hour.inputElement.validate = function() {
           // Value is empty: invalid if main element is required or one field
           // is set
-          if( !this.value || this.value == '' ){
+          if (!this.value || this.value === '') {
             this.invalid = !!el.required || el._oneFieldSet();
             return !this.invalid;
           }
 
           var hour = this.value;
-
           var ampm = el.$.ampmListbox.selected;
 
-
           // Out of range in all cases
-          if( hour < 0 || hour > 12 ){
+          if (hour < 0 || hour > 12) {
             this.invalid = true;
             return !this.invalid;
-          };
+          }
 
           // 12:10AM is nonsense, it must be 00:10AM
-          if( ampm == 'am' && hour == 12 ){
+          if (ampm == 'am' && hour == 12) {
             this.invalid = true;
             return !this.invalid;
           }
 
           // 00:10PM is nonsense, it must be 12:10PM
-          if( ampm == 'pm' && hour == 0 ){
+          if (ampm == 'pm' && hour === 0) {
             this.invalid = true;
             return !this.invalid;
           }
 
           this.invalid = false;
           return !this.invalid;
-
-        }
+        };
       },
 
-      _pad: function(v){
-        return String( v ).length  == 1  ?  "0" + v : v;
-
+      _pad: function(v) {
+        return String(v).length  == 1  ?  "0" + v : v;
       },
 
-      _timeChanged: function(){
-
+      _timeChanged: function() {
         this._protectHourMinuteAmpm = true;
 
-        if( !this.hour || !this.minute || !this.ampm ){
+        if (!this.hour || !this.minute || !this.ampm) {
           this.value = '';
         } else {
-          var formattedHour = ( this.ampm == 'pm' && Number( this.hour ) < 12 ) ? String( Number( this.hour ) + 12 ) : this.hour;
+          var formattedHour = (this.ampm == 'pm' && Number(this.hour) < 12) ? String(Number(this.hour) + 12) : this.hour;
 
-          if( this.ampm == 'am' && this.hour == 0 ) this.$.hour.label = 'Midnight';
-          else if( this.ampm == 'pm' && this.hour == 12 ) this.$.hour.label = 'Midday';
+          /* FIXME: This won't show, we use the widget label, not the inner input ones */
+          if (this.ampm == 'am' && this.hour === 0) this.$.hour.label = 'Midnight';
+          else if (this.ampm == 'pm' && this.hour == 12) this.$.hour.label = 'Midday';
           else this.$.hour.label = 'Hr';
 
           this._protectHourMinuteAmpm = true;
@@ -237,21 +241,21 @@ TODO:
         this._protectHourMinuteAmpm = false;
       },
 
-      _valueChanged: function( v ){
+      _valueChanged: function(v) {
         var m;
 
-        if( this._protectHourMinuteAmpm ) return;
+        if (this._protectHourMinuteAmpm) return;
 
-        if(  v && v.match ) {
-          if( m = v.match(/^(\d{2}):(\d{2})$/m) ){
+        if (v && v.match) {
+          if (m = v.match(/^(\d{2}):(\d{2})$/m)) {
 
             this.minute = m[ 2 ];
-            this.hour = this._pad( Number( m[ 1 ] ) );
+            this.hour = this._pad(Number(m[ 1 ]));
 
-            if( this.hour > 12 ){
-              this.hour = this._pad( this.hour - 12 );
+            if (this.hour > 12) {
+              this.hour = this._pad(this.hour - 12);
               this.ampm = 'pm';
-            } else if( this.hour == 12 ){
+            } else if (this.hour == 12) {
               this.ampm = 'pm';
             } else {
               this.ampm = 'am';
@@ -266,27 +270,21 @@ TODO:
         this.validate();
       },
 
-
-      // If invalid is set to "true", it will artificially invalidate _all_ fields
-      _invalidChanged: function(){
-        if( this.invalid ){
-          this.$.hour.invalid = true;
-          this.$.minute.invalid = true;
-          this.$.ampm.invalid = true;
-        } else {
-          this.$.hour.invalid = false;
-          this.$.minute.invalid = false;
-          this.$.ampm.invalid = false;
-        }
+      /*
+       * If invalid is set to "true", it will artificially invalidate _all_ fields
+       */
+      _invalidChanged: function() {
+        this.$.hour.invalid = this.invalid || false;
+        this.$.minute.invalid = this.invalid || false;
+        this.$.ampm.invalid = this.invalid || false;
       },
 
       /*
        * Validate function; validation is TOTALLY delegated to the
        * sub-elements. They will do all of work of checking if they should be
        * set (if the parent is required, or if at least ONE sibling is set)
-      */
-      validate: function(){
-
+       */
+      validate: function() {
         this.$.hour.validate();
         this.$.minute.validate();
         this.$.ampm.validate();
