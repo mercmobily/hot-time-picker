@@ -99,9 +99,8 @@ TODO:
       </paper-dropdown-menu>
     </div>
 
-    <template is="dom-if" if="[[errorMessage]]">
-      <paper-input-error aria-live="assertive">[[errorMessage]]</paper-input-error>
-    </template>
+    <paper-input-error aria-live="assertive" invalid>Stocazzo time picker</paper-input-error>
+    <paper-input-error aria-live="assertive" invalid$="[[invalid]]">[[errorMessage]]</paper-input-error>
   </template>
 
   <script>
